@@ -16,7 +16,7 @@
     "install": "prebuild-install -r napi || node-gyp rebuild",
     "build": "node-gyp rebuild",
     "build:debug": "node-gyp rebuild --debug",
-    "prebuild": "prebuildify --napi --strip",
+    "prebuild": "prebuildify --napi --strip --target 22.21.1",
     "prebuild:all": "prebuildify-cross -i centos7-devtoolset7 -i alpine -i linux-armv7 -i linux-arm64",
     "test": "node test/test.js",
     "clean": "node-gyp clean",
@@ -52,15 +52,15 @@
     "url": "https://github.com/LXrdKnowkill/hexcore-unicorn/issues"
   },
   "homepage": "https://github.com/LXrdKnowkill/hexcore-unicorn#readme",
-	"engines": {
-		"vscode": "^1.0.0",
-		"node": ">=18.0.0"
-	},
-	"activationEvents": [],
-	"dependencies": {
-		"node-addon-api": "^7.0.0",
-		"prebuild-install": "^7.1.1"
-	},
+  "engines": {
+    "vscode": "^1.0.0",
+    "node": ">=18.0.0"
+  },
+  "activationEvents": [],
+  "dependencies": {
+    "node-addon-api": "^7.0.0",
+    "prebuild-install": "^7.1.1"
+  },
   "devDependencies": {
     "node-gyp": "^10.0.0",
     "prebuildify": "^6.0.0"
@@ -80,7 +80,8 @@
     "README.md"
   ],
   "binary": {
-    "napi_versions": [8]
+    "napi_versions": [
+      8
+    ]
   }
 }
-
