@@ -14,6 +14,7 @@
 #include <vector>
 #include <mutex>
 #include <atomic>
+#include <condition_variable>
 
 // Forward declarations
 struct HookData;
@@ -268,17 +269,7 @@ private:
 public:
 	// Helper for checking breakpoints from static callback
 	bool IsBreakpointHit(uint64_t address) {
-		// No lock needed here as we only read, and it's called from the same thread as emulation
-		// strict consistency isn't critical for a breakpoint check
-		// (if we miss one cycle due to race during add, it's fine)
-		// But for correctness with the defined mutex:
-		// std::lock_guard<std::mutex> lock(hookMutex_);
-		// Locking every instruction IS expensive.
-		// Since emulation is single-threaded usually, and JS calls add/del from main thread,
-		// there IS a race if we add/del while running async.
-		// However, standard use case is add/del while paused.
-		// If async, we might need a lockless atomic check or read-copy-update.
-		// For now, avoiding lock for perf.
+		std::lock_guard<std::mutex> lock(hookMutex_);
 		return breakpoints_.count(address) > 0;
 	}
 };
@@ -295,7 +286,10 @@ public:
 	~UnicornContext();
 
 	uc_context* GetContext() const { return context_; }
-	void SetContext(uc_context* ctx) { context_ = ctx; }
+	void SetContext(uc_engine* engine, uc_context* ctx) {
+		engine_ = engine;
+		context_ = ctx;
+	}
 
 private:
 	uc_context* context_;
@@ -346,6 +340,10 @@ struct MemHookCallData {
 
 struct InterruptHookCallData {
 	uint32_t intno;
+	// Synchronization: the native hook blocks until JS finishes the syscall handler
+	std::atomic<bool> done{false};
+	std::mutex mtx;
+	std::condition_variable cv;
 };
 
 struct InsnHookCallData {
@@ -358,6 +356,8 @@ struct InvalidMemHookCallData {
 	uint64_t address;
 	int size;
 	int64_t value;
+	// result is set by the C++ auto-map logic (true if mapped successfully)
+	bool result{false};
 };
 
 // ============== Hook Callback Functions ==============

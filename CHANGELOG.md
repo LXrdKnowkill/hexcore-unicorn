@@ -2,6 +2,20 @@
 
 All notable changes to `hexcore-unicorn` will be documented in this file.
 
+## [1.2.2] - 2026-03-22
+
+### Fixed
+
+- **Hook-time mutation support** — removed the `emulating_` write guards from `memMap`, `memWrite`, `regWrite`, and `regWriteBatch` so hook callbacks can safely mutate emulator state while Unicorn is paused.
+- **Interrupt hook synchronization** — switched the interrupt hook path to a blocking handoff with an explicit completion signal, allowing syscall handlers to write return values before emulation resumes.
+- **Invalid memory fault recovery** — invalid memory hooks now perform page-aligned `uc_mem_map` directly on the Unicorn thread instead of relying on cross-thread mapping during async emulation.
+- **ThreadSafeFunction callback lifetime** — hook callback payloads are now allocated with `std::make_unique` and passed through release semantics, reducing leak-prone raw allocation patterns in the hot path.
+- **Context wrapper API alignment** — standalone bindings now match the monorepo context ownership flow (`SetContext(ctx)`), avoiding signature drift between the packaged engine and the IDE integration.
+
+### Added
+
+- **ARM64 crash regression harness** — added `test/test_arm64_crash.js` to exercise synchronous ARM64 `emuStart`, SVC handling, interrupt hooks, and basic register progression on Windows.
+
 ## [1.2.1] - 2026-02-15
 
 ### Fixed
